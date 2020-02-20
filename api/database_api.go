@@ -3,20 +3,19 @@ package api
 import (
 	"encoding/json"
 
-	"github.com/asuleymanov/golos-go/transports"
+	"github.com/asuleymanov/golos-go/operations"
 	"github.com/asuleymanov/golos-go/types"
 )
 
 //database_api
 
-//GetAccountBandwidth api request get_account_bandwidth
+//GetAccountBandwidth displays user actions based on type
 /*
 bandwidthType:
 post = 0
 forum = 1
 market = 2
-old_forum = 3
-old_market = 4
+custom_json = 3
 */
 func (api *API) GetAccountBandwidth(accountName string, bandwidthType uint32) (*Bandwidth, error) {
 	var resp Bandwidth
@@ -24,10 +23,10 @@ func (api *API) GetAccountBandwidth(accountName string, bandwidthType uint32) (*
 	return &resp, err
 }
 
-//GetAccountCount api request get_account_count
-func (api *API) GetAccountCount() (*uint32, error) {
-	var resp uint32
-	err := api.call("database_api", "get_account_count", transports.EmptyParams, &resp)
+//GetAccountCount returns the number of registered users.
+func (api *API) GetAccountCount() (*uint64, error) {
+	var resp uint64
+	err := api.call("database_api", "get_account_count", EmptyParams, &resp)
 	return &resp, err
 }
 
@@ -57,14 +56,14 @@ func (api *API) GetBlockHeader(blockNum uint32) (*BlockHeader, error) {
 //GetChainProperties api request get_chain_properties
 func (api *API) GetChainProperties() (*types.ChainProperties, error) {
 	var resp types.ChainProperties
-	err := api.call("database_api", "get_chain_properties", transports.EmptyParams, &resp)
+	err := api.call("database_api", "get_chain_properties", EmptyParams, &resp)
 	return &resp, err
 }
 
 //GetConfig api request get_config
 func (api *API) GetConfig() (*Config, error) {
 	var resp Config
-	err := api.call("database_api", "get_config", transports.EmptyParams, &resp)
+	err := api.call("database_api", "get_config", EmptyParams, &resp)
 	return &resp, err
 }
 
@@ -78,14 +77,14 @@ func (api *API) GetConversionRequests(accountName string) ([]*ConversionRequests
 //GetDatabaseInfo api request get_database_info
 func (api *API) GetDatabaseInfo() (*DatabaseInfo, error) {
 	var resp DatabaseInfo
-	err := api.call("database_api", "get_database_info", transports.EmptyParams, &resp)
+	err := api.call("database_api", "get_database_info", EmptyParams, &resp)
 	return &resp, err
 }
 
 //GetDynamicGlobalProperties api request get_dynamic_global_properties
 func (api *API) GetDynamicGlobalProperties() (*DynamicGlobalProperties, error) {
 	var resp DynamicGlobalProperties
-	err := api.call("database_api", "get_dynamic_global_properties", transports.EmptyParams, &resp)
+	err := api.call("database_api", "get_dynamic_global_properties", EmptyParams, &resp)
 	return &resp, err
 }
 
@@ -97,13 +96,13 @@ func (api *API) GetEscrow(from string, escrowID uint32) (*Escrow, error) {
 }
 
 //GetExpiringVestingDelegations api request get_expiring_vesting_delegations
-func (api *API) GetExpiringVestingDelegations(account string, from types.Time, opts ...interface{}) ([]*VestingDelegationExpiration, error) {
+func (api *API) GetExpiringVestingDelegations(account string, from types.Time, limit ...uint32) ([]*VestingDelegationExpiration, error) {
 	params := []interface{}{account, from}
-	switch len(opts) {
+	switch len(limit) {
 	case 0:
 		params = append(params, 100)
 	default:
-		params = append(params, opts...)
+		params = append(params, limit[0])
 	}
 	var resp []*VestingDelegationExpiration
 	err := api.call("database_api", "get_expiring_vesting_delegations", params, &resp)
@@ -113,14 +112,14 @@ func (api *API) GetExpiringVestingDelegations(account string, from types.Time, o
 //GetHardforkVersion api request get_hardfork_version
 func (api *API) GetHardforkVersion() (*string, error) {
 	var resp string
-	err := api.call("database_api", "get_hardfork_version", transports.EmptyParams, &resp)
+	err := api.call("database_api", "get_hardfork_version", EmptyParams, &resp)
 	return &resp, err
 }
 
 //GetNextScheduledHardfork api request get_next_scheduled_hardfork
 func (api *API) GetNextScheduledHardfork() (*NextScheduledHardfork, error) {
 	var resp NextScheduledHardfork
-	err := api.call("database_api", "get_next_scheduled_hardfork", transports.EmptyParams, &resp)
+	err := api.call("database_api", "get_next_scheduled_hardfork", EmptyParams, &resp)
 	return &resp, err
 }
 
@@ -132,7 +131,7 @@ func (api *API) GetOwnerHistory(accountName string) ([]*OwnerHistory, error) {
 }
 
 //GetPotentialSignatures api request get_potential_signatures
-func (api *API) GetPotentialSignatures(trx *types.Transaction) ([]*string, error) {
+func (api *API) GetPotentialSignatures(trx *operations.Transaction) ([]*string, error) {
 	var resp []*string
 	err := api.call("database_api", "get_potential_signatures", []interface{}{&trx}, &resp)
 	return resp, err
@@ -153,7 +152,7 @@ func (api *API) GetRecoveryRequest(accountName string) (*AccountRecoveryRequest,
 }
 
 //GetRequiredSignatures api request get_required_signatures
-func (api *API) GetRequiredSignatures(trx *types.Transaction, keys ...string) ([]*string, error) {
+func (api *API) GetRequiredSignatures(trx *operations.Transaction, keys ...string) ([]*string, error) {
 	var resp []*string
 	err := api.call("database_api", "get_required_signatures", []interface{}{trx, keys}, &resp)
 	return resp, err
@@ -174,23 +173,25 @@ func (api *API) GetSavingsWithdrawTo(accountName string) ([]*SavingsWithdraw, er
 }
 
 //GetTransactionHex api request get_transaction_hex
-func (api *API) GetTransactionHex(trx *types.Transaction) (*string, error) {
+func (api *API) GetTransactionHex(trx *operations.Transaction) (*string, error) {
 	var resp string
 	err := api.call("database_api", "get_transaction_hex", []interface{}{&trx}, &resp)
 	return &resp, err
 }
 
 //GetVestingDelegations api request get_vesting_delegations
-func (api *API) GetVestingDelegations(account, from string, opts ...interface{}) ([]*VestingDelegation, error) {
+//dtype:
+//  delegated
+//  any other
+func (api *API) GetVestingDelegations(account, from, dtype string, limit ...uint32) ([]*VestingDelegation, error) {
 	params := []interface{}{account, from}
-	switch len(opts) {
+	switch len(limit) {
 	case 0:
-		params = append(params, 100, "delegated")
-	case 1:
-		params = append(params, opts[0], "delegated")
+		params = append(params, 100)
 	default:
-		params = append(params, opts...)
+		params = append(params, limit[0])
 	}
+	params = append(params, dtype)
 	var resp []*VestingDelegation
 	err := api.call("database_api", "get_vesting_delegations", params, &resp)
 	return resp, err
@@ -199,11 +200,11 @@ func (api *API) GetVestingDelegations(account, from string, opts ...interface{})
 //GetWithdrawRoutes api request get_withdraw_routes
 /*
 withdrawRouteType:
-incoming
-outgoing
-all
+0 = incoming
+1 = outgoing
+2 = all
 */
-func (api *API) GetWithdrawRoutes(accountName, withdrawRouteType string) ([]*WithdrawVestingRoutes, error) {
+func (api *API) GetWithdrawRoutes(accountName string, withdrawRouteType uint32) ([]*WithdrawVestingRoutes, error) {
 	var resp []*WithdrawVestingRoutes
 	err := api.call("database_api", "get_withdraw_routes", []interface{}{accountName, withdrawRouteType}, &resp)
 	return resp, err
@@ -231,7 +232,7 @@ func (api *API) GetVerifyAccountAuthority(accountName string, keys ...string) (*
 }
 
 //GetVerifyAuthority api request verify_authority
-func (api *API) GetVerifyAuthority(trx *types.Transaction) (*bool, error) {
+func (api *API) GetVerifyAuthority(trx *operations.Transaction) (*bool, error) {
 	var resp bool
 	err := api.call("database_api", "verify_authority", []interface{}{&trx}, &resp)
 	return &resp, err
