@@ -14,7 +14,7 @@ import "github.com/asuleymanov/golos-go"
 
 ## Example
 
-This is just a code snippet. Please check the `examples` directory
+This is just a code snippet. Please check the `example` directory
 for more complete and ready to use examples.
 
 ```go
